@@ -1,0 +1,30 @@
+# Web backend
+fastapi
+uvicorn[standard]
+
+# Database
+pymongo
+elasticsearch==8.11.0
+psycopg2-binary
+sqlalchemy
+
+# Vector Database
+chromadb
+
+# RAG / Agent
+langchain
+langchain-openai
+langchain-community
+langchain-chroma
+openai
+python-dotenv
+
+# Embeddings
+sentence-transformers
+
+# ETL / Data Processing
+requests
+beautifulsoup4
+lxml
+feedparser
+tqdm
