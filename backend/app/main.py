@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api import etl, search
+from app.api import etl, search, rag
 
 app = FastAPI(
     title="BadgerScholar API",
@@ -20,6 +20,7 @@ app.add_middleware(
 # register routers
 app.include_router(etl.router)
 app.include_router(search.router)
+app.include_router(rag.router)
 
 @app.get("/")
 def root():
@@ -30,6 +31,7 @@ def root():
         "endpoints": {
             "etl": "/api/etl",
             "search": "/api/search",
+            "rag": "/api/rag",
             "health": "/health"
         }
     }
