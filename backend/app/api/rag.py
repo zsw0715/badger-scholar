@@ -6,6 +6,7 @@ from typing import Optional
 
 from app.services.rag_service import rag_service
 from app.services.vector_index_service import vector_index_service
+from app.services.fulltext_indexer import fulltext_indexer
 
 router = APIRouter(prefix="/api/rag", tags=["RAG"])
 
@@ -40,6 +41,12 @@ class VectorSyncResponse(BaseModel):
 class VectorSyncStatusResponse(BaseModel):
     mongodb_count: int
     chromadb_count: int
+    in_sync: bool
+
+
+class FulltextSyncStatusResponse(BaseModel):
+    chromadb_count: int
+    fulltext_indexed_papers: int
     in_sync: bool
 
 
@@ -114,4 +121,19 @@ async def get_vector_sync_status():
         raise HTTPException(
             status_code=500,
             detail=f"Failed to fetch sync status: {str(e)}"
+        )
+
+
+@router.get("/sync-status/fulltext", response_model=FulltextSyncStatusResponse)
+async def get_fulltext_sync_status():
+    """
+    Compare MongoDB vs ChromaDB counts for fine (full-text chunk) embeddings.
+    """
+    try:
+        status = fulltext_indexer.get_sync_status()
+        return FulltextSyncStatusResponse(**status)
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to fetch fulltext sync status: {str(e)}"
         )

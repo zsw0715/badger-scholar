@@ -156,6 +156,7 @@ class FullTextIndexer:
             {"$set": {
                 "fulltext_indexed": True,
                 "fulltext_embedding_model": EMBEDDING_MODEL,
+                "fulltext_chunk_count": len(texts),
             }}
         )
 
@@ -181,7 +182,30 @@ class FullTextIndexer:
 
         return total_chunks
 
-    # --------- Main pipeline ----------
+    # --------- Sync status (full-text) -----
+    def get_sync_status(self) -> Dict[str, int | bool]:
+        """
+        Compare MongoDB full-text chunk count vs Chroma chunk count.
+        """
+        mongo_fulltext_papers = self.collection.count_documents({"fulltext_indexed": True})
+        pipeline = [
+            {"$match": {"fulltext_indexed": True}},
+            {"$group": {
+                "_id": None,
+                "total_chunks": {"$sum": {"$ifNull": ["$fulltext_chunk_count", 0]}}
+            }}
+        ]
+        agg = list(self.collection.aggregate(pipeline))
+        mongo_chunk_count = agg[0]["total_chunks"] if agg else 0
+        chroma_chunk_count = self.collection_db.count()
+
+        return {
+            "chromadb_count": chroma_chunk_count,
+            "fulltext_indexed_papers": mongo_fulltext_papers,
+            "in_sync": mongo_chunk_count == chroma_chunk_count
+        }
+        
+            # --------- Main pipeline ----------
     def run_indexing(self, limit: Optional[int] = None) -> int:
         papers = self.load_unindexed(limit=limit)
         if not papers:
