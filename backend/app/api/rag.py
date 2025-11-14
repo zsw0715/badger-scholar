@@ -5,12 +5,12 @@ from pydantic import BaseModel, Field
 from typing import Optional
 
 from app.services.rag_service import rag_service
+from app.services.vector_index_service import vector_index_service
 
 router = APIRouter(prefix="/api/rag", tags=["RAG"])
 
 
 # ========= Request & Response Models =========
-
 class RAGQueryRequest(BaseModel):
     question: str = Field(..., description="User question")
     top_k_papers: int = Field(5, description="Summary-level coarse retrieval count")
@@ -23,8 +23,27 @@ class RAGQueryResponse(BaseModel):
     chunks: list
 
 
-# ========= API Endpoint =========
+class VectorSyncRequest(BaseModel):
+    limit: Optional[int] = Field(
+        default=None,
+        ge=1,
+        description="Only sync this many pending papers (None = sync all pending papers)."
+    )
 
+
+class VectorSyncResponse(BaseModel):
+    status: str
+    indexed_count: int
+    message: str
+
+
+class VectorSyncStatusResponse(BaseModel):
+    mongodb_count: int
+    chromadb_count: int
+    in_sync: bool
+
+
+# ========= API Endpoint =========
 @router.post("/query", response_model=RAGQueryResponse)
 async def rag_query(req: RAGQueryRequest):
     """
@@ -51,4 +70,48 @@ async def rag_query(req: RAGQueryRequest):
         raise HTTPException(
             status_code=500,
             detail=f"RAG query failed: {str(e)}"
+        )
+
+
+@router.post("/sync-coarse", response_model=VectorSyncResponse)
+async def sync_coarse_embeddings(req: Optional[VectorSyncRequest] = None):
+    """
+    Trigger coarse-grained vector indexing so MongoDB summaries are synced to ChromaDB.
+    """
+    try:
+        limit = req.limit if req else None
+        indexed_total = vector_index_service.run_indexing(limit=limit)
+
+        if indexed_total == 0:
+            status = "noop"
+            message = "All papers already vector indexed."
+        else:
+            status = "success"
+            message = f"Indexed {indexed_total} papers into ChromaDB."
+
+        return VectorSyncResponse(
+            status=status,
+            indexed_count=indexed_total,
+            message=message,
+        )
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Vector sync failed: {str(e)}"
+        )
+
+
+@router.get("/sync-status", response_model=VectorSyncStatusResponse)
+async def get_vector_sync_status():
+    """
+    Compare MongoDB vs ChromaDB counts for coarse embeddings.
+    """
+    try:
+        status = vector_index_service.get_sync_status()
+        return VectorSyncStatusResponse(**status)
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to fetch sync status: {str(e)}"
         )

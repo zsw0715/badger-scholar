@@ -4,7 +4,7 @@
 # Embedding Pipeline
 
 import os
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Any
 
 from pymongo import MongoClient
 from sentence_transformers import SentenceTransformer
@@ -134,6 +134,19 @@ class VectorIndexService:
 
         print(f"✅ Indexed {len(chroma_ids)} papers in this batch.")
         return len(chroma_ids)
+    
+    def get_sync_status(self) -> Dict[str, Any]:
+        """
+        Compare MongoDB paper count with Chroma vector count.
+        """
+        mongo_count = self.mongo_coll.count_documents({})
+        chroma_count = self.chroma_coll.count()
+
+        return {
+            "mongodb_count": mongo_count,
+            "chromadb_count": chroma_count,
+            "in_sync": mongo_count == chroma_count
+        }
 
     # ========= Entry point =========
     def run_indexing(self, limit: Optional[int] = None, batch_size: int = BATCH_SIZE) -> int:
