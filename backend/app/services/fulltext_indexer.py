@@ -98,7 +98,7 @@ class FullTextIndexer:
         4. mark Mongo as fulltext_indexed
         """
         arxiv_id = paper["arxiv_id"]
-        print(f"\n📄 Processing full text: {arxiv_id}")
+        print(f"\nProcessing full text: {arxiv_id}")
 
         # Step 1: extract chunks
         chunks = fulltext_service.get_fulltext_chunks(arxiv_id)
@@ -134,7 +134,7 @@ class FullTextIndexer:
             return 0
 
         # Step 2: embedding
-        print(f"🧠 Embedding {len(texts)} chunks...")
+        print(f"Embedding {len(texts)} chunks...")
         embeddings = self.model.encode(
             texts,
             batch_size=BATCH_SIZE,
@@ -142,7 +142,7 @@ class FullTextIndexer:
         )
 
         # Step 3: save to Chroma
-        print("💾 Saving to ChromaDB...")
+        print("Saving to ChromaDB...")
         self.collection_db.add(
             ids=ids,
             documents=texts,

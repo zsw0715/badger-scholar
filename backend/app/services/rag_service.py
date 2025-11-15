@@ -125,22 +125,22 @@ class RagService:
           }
         """
 
-        # === 1. Coarse retrieval on summary embeddings ===
+        # === Coarse retrieval on summary embeddings ===
         coarse_results = self.coarse_retriever.search(
             query=question,
             top_k=top_k_papers
         )
         arxiv_ids = [p["arxiv_id"] for p in coarse_results]
 
-        # === 2. Ensure full-text chunks exist for these papers (on-demand indexing) ===
+        # === Ensure full-text chunks exist for these papers (on-demand indexing) ===
         #    如果某篇 paper 还没有 fulltext_indexed，就在这里调用 fulltext_indexer 生成
         for aid in arxiv_ids:
             paper = self.paper_coll.find_one({"arxiv_id": aid})
             if paper and not paper.get("fulltext_indexed", False):
-                print(f"📥 Fulltext not indexed for {aid}, indexing now...")
+                print(f"Fulltext not indexed for {aid}, indexing now...")
                 fulltext_indexer.process_single_paper(paper)
 
-        # === 3. Fine retrieval restricted to coarse arxiv_ids ===
+        # === Fine retrieval restricted to coarse arxiv_ids ===
         # 先全局取一个稍大的 top_k，比如 100，然后过滤到 coarse 的那几篇 paper
         raw_chunks = self.chunk_retriever.retrieve_chunks(
             question=question,
@@ -152,10 +152,10 @@ class RagService:
             if c.get("arxiv_id") in arxiv_ids
         ][:top_k_chunks]
 
-        # === 4. Build context string ===
+        # === Build context string ===
         context_str = self._build_context_from_chunks(fine_chunks)
 
-        # === 5. Call LLM ===
+        # === Call LLM ===
         system_prompt = (
             "You are a helpful assistant that answers questions based only on the given context excerpts."
         )
@@ -166,7 +166,7 @@ class RagService:
             user_prompt=user_prompt
         )
 
-        # === 6. Return structured result ===
+        # === Return structured result ===
         return {
             "answer": answer_text,
             "papers": coarse_results,

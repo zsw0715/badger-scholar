@@ -17,12 +17,10 @@ class RAGQueryRequest(BaseModel):
     top_k_papers: int = Field(5, description="Summary-level coarse retrieval count")
     top_k_chunks: int = Field(8, description="Full-text fine retrieval chunk count")
 
-
 class RAGQueryResponse(BaseModel):
     answer: str
     papers: list
     chunks: list
-
 
 class VectorSyncRequest(BaseModel):
     limit: Optional[int] = Field(
@@ -31,18 +29,15 @@ class VectorSyncRequest(BaseModel):
         description="Only sync this many pending papers (None = sync all pending papers)."
     )
 
-
 class VectorSyncResponse(BaseModel):
     status: str
     indexed_count: int
     message: str
 
-
 class VectorSyncStatusResponse(BaseModel):
     mongodb_count: int
     chromadb_count: int
     in_sync: bool
-
 
 class FulltextSyncStatusResponse(BaseModel):
     chromadb_count: int
@@ -79,7 +74,6 @@ async def rag_query(req: RAGQueryRequest):
             detail=f"RAG query failed: {str(e)}"
         )
 
-
 @router.post("/sync-coarse", response_model=VectorSyncResponse)
 async def sync_coarse_embeddings(req: Optional[VectorSyncRequest] = None):
     """
@@ -108,7 +102,6 @@ async def sync_coarse_embeddings(req: Optional[VectorSyncRequest] = None):
             detail=f"Vector sync failed: {str(e)}"
         )
 
-
 @router.get("/sync-status", response_model=VectorSyncStatusResponse)
 async def get_vector_sync_status():
     """
@@ -122,7 +115,6 @@ async def get_vector_sync_status():
             status_code=500,
             detail=f"Failed to fetch sync status: {str(e)}"
         )
-
 
 @router.get("/sync-status/fulltext", response_model=FulltextSyncStatusResponse)
 async def get_fulltext_sync_status():

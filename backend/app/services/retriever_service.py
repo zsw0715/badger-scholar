@@ -15,80 +15,83 @@ CHROMA_COLLECTION_NAME = "papers_embeddings"
 EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 
 class RetrieverService:
-  """
-  Retrieve top-k similar papers using vector embeddings from ChromaDB.
-  """
-  def __init__(self):
-    # Load embedding model (same as indexing)
-    print("Loading embedding model:", EMBEDDING_MODEL)
-    self.model = SentenceTransformer(EMBEDDING_MODEL)
-
-    # Connect Chroma
-    print("Connecting to ChromaDB...")
-    # self.chroma = chromadb.Client(
-    #   Settings(chroma_db_impl="duckdb+parquet",
-    #             persist_directory=CHROMA_PERSIST_DIR)
-    # )
-    self.chroma = chromadb.PersistentClient(
-        path=CHROMA_PERSIST_DIR
-    )
-
-    # Load existing collection
-    self.collection = self.chroma.get_or_create_collection(
-      CHROMA_COLLECTION_NAME,
-      metadata={"hnsw:space": "cosine"}
-    )
-
-    print("RetrieverService initialized! ")
-  
-  # ========= Build embedding for query =========
-  def embed_query(self, query: str):
-    """Convert user query -> embedding vector"""
-    return self.model.encode([query])[0]   # shape (384,)  this is the shape of all-MiniLM-L6-v2
-  
-  # ========= Search collection =========
-  def search(self, query: str, top_k: int = 5) -> List[Dict]:
     """
-    Top-k semantic search
-
-    Return format:
-    [
-      {
-        "arxiv_id": "...",
-        "score": ...,
-        "title": "...",
-        "document": "Title: ...\n\nAbstract: ...",
-      }
-    ]
+    Retrieve top-k similar papers using vector embeddings from ChromaDB.
     """
-    query_embedding = self.embed_query(query)
-    
-    result = self.collection.query(
-        query_embeddings=[query_embedding],
-        n_results=top_k,
-        include=["distances", "documents", "metadatas"]
-    )
-    
-    # Chroma returns list-of-lists
-    docs = result["documents"][0]
-    metas = result["metadatas"][0]
-    dists = result["distances"][0]
-    
-    # Convert distance → similarity score
-    def to_score(d):
-      return round(1 - d, 4)  # cosine distance => similarity
+    def __init__(self):
+        # Load embedding model (same as indexing)
+        print("Loading embedding model:", EMBEDDING_MODEL)
+        self.model = SentenceTransformer(EMBEDDING_MODEL)
 
-    final = []
-    for doc, meta, dist in zip(docs, metas, dists):
-      final.append({
-          "arxiv_id": meta["arxiv_id"],
-          "title": meta["title"],
-          "primary_category": meta.get("primary_category"),
-          "document": doc,
-          "score": to_score(dist)
-      })
+        # Connect Chroma
+        print("Connecting to ChromaDB...")
 
-    return final
+        self.chroma = chromadb.PersistentClient(
+            path=CHROMA_PERSIST_DIR
+        )
+
+        # Load existing collection
+        self.collection = self.chroma.get_or_create_collection(
+            CHROMA_COLLECTION_NAME,
+            metadata={"hnsw:space": "cosine"}
+        )
+
+        print("RetrieverService initialized! ")
+  
+    # ========= Build embedding for query =========
+    def embed_query(self, query: str):
+        """Convert user query -> embedding vector"""
+        # self.model 是 SentenceTransformer 实例，encode() 方法返回 numpy.ndarray(一个 shape 为 384 的向量，这个向量对应着 all-MiniLM-L6-v2 模型的输出)
+        # 然后这个向量会被用来在 ChromaDB 里做向量搜索
+        return self.model.encode([query])[0]   # shape (384,)  this is the shape of all-MiniLM-L6-v2
+  
+    # ========= Search collection =========
+    def search(self, query: str, top_k: int = 5) -> List[Dict]:
+        """
+        Top-k semantic search
+
+        Return format:
+        [
+            {
+                "arxiv_id": "...",
+                "score": ...,
+                "title": "...",
+                "document": "Title: ...\n\nAbstract: ...",
+            }
+        ]
+        """
+        query_embedding = self.embed_query(query)
+    
+        # 把上一步返回的 embedding 向量传给 ChromaDB，做向量搜索, collection 是 ChromaDB 里的一个“表”
+        result = self.collection.query(
+            query_embeddings=[query_embedding],
+            n_results=top_k,        # 返回 top_k 个最相似的结果
+            include=["distances", "documents", "metadatas"]     # 需要返回的字段，包括距离、文本内容、元数据
+        )
+        # 之前的 "distance" 可以用来选择相似度评分，通过 1 - distance 转换为 similarity score
+        # "documents" 是之前写入的文本内容 《《Title: ...\n\nAbstract: ...》》
+        # "metadatas" 包含 arxiv_id, title, primary_category 等信息
+    
+        # Chroma returns list-of-lists
+        docs = result["documents"][0]
+        metas = result["metadatas"][0]
+        dists = result["distances"][0]
+    
+        # Convert distance → similarity score
+        def to_score(d):
+            return round(1 - d, 4)  # cosine distance => similarity
+
+        final = []
+        for doc, meta, dist in zip(docs, metas, dists):
+            final.append({
+                "arxiv_id": meta["arxiv_id"],
+                "title": meta["title"],
+                "primary_category": meta.get("primary_category"),
+                "document": doc,
+                "score": to_score(dist)
+            })
+
+        return final
 
 # Singleton
 retriever_service = RetrieverService()
