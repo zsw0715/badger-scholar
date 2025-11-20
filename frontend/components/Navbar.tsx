@@ -58,7 +58,7 @@ export default function Navbar() {
                 <div className="flex items-center justify-center space-x-3">
                     {/* Search Bar */}
                     <div
-                        className="flex items-center gap-2 px-3 py-1.5 rounded-lg border bg-background hover:bg-accent/50 transition-colors cursor-pointer min-w-[280px]"
+                        className="flex items-center gap-2 px-3 py-1.5 rounded-2xl border bg-background hover:bg-accent/50 transition-colors cursor-pointer min-w-[280px]"
                         onClick={() => setSearchOpen(true)}
                     >
                         <Search className="h-4 w-4 text-muted-foreground" />
@@ -71,8 +71,8 @@ export default function Navbar() {
                     <ModeToggle />
                     <div className="flex items-center justify-between rounded-2xl pl-3 py-0.5 pr-0.5 space-x-3 hover:bg-zinc-200/60 dark:hover:bg-zinc-700/20 cursor-pointer transition-all duration-300">
                         <span className="text-sm font-medium">Username</span>
-                        <div className="h-full w-full rounded-lg">
-                            <Image src="/assets/user_avatar_placeholder.png" alt="User Avatar" width={32} height={32} className="rounded-lg" />
+                        <div className="h-full w-full rounded-2xl">
+                            <Image src="/assets/user_avatar_placeholder.png" alt="User Avatar" width={32} height={32} className="rounded-2xl" />
                         </div>
                     </div>
                 </div>

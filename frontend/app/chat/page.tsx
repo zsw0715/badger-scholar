@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
 import { ChunksCarousel } from "@/components/chunks-carousel";
 import { PdfViewerDialog } from "@/components/pdf-viewer-dialog";
 import { Send, Loader2, FileText, Bot, Database, CheckCircle, AlertTriangle, XCircle } from "lucide-react";
@@ -159,55 +158,55 @@ export default function Chat() {
     return (
         <div className="h-full flex">
             {/* Sidebar - Reserved for Chat History */}
-            <div className="w-80 border-r bg-zinc-950 dark:bg-zinc-950 p-4 flex flex-col">
+            <div className="w-80 border-r bg-gray-400/10 dark:bg-zinc-950 p-4 flex flex-col">
                 {/* TODO: Add chat history */}
                 <div className="flex-1" />
 
                 {/* Sync Status Monitor */}
-                <div className="space-y-3 pt-4 border-t border-zinc-800">
+                <div className="space-y-3 pt-4 border-t border-gray-400/20 dark:border-zinc-800">
                     <div className="flex items-center gap-2 mb-2">
-                        <Database className="w-4 h-4 text-zinc-400" />
-                        <h3 className="text-sm font-semibold text-white">Sync Status</h3>
+                        <Database className="w-4 h-4 text-zinc-800 dark:text-zinc-400" />
+                        <h3 className="text-sm font-semibold text-zinc-800 dark:text-white">Sync Status</h3>
                     </div>
 
                     {/* Coarse Grained Status */}
-                    <div className="bg-zinc-900 rounded-lg p-3 space-y-2">
+                    <div className="bg-gray-400/10 dark:bg-zinc-900 rounded-2xl p-3 space-y-2">
                         <div className="flex items-center justify-between">
-                            <span className="text-xs text-zinc-400">Coarse (Papers)</span>
+                            <span className="text-xs text-zinc-800 dark:text-zinc-400">Coarse (Papers)</span>
                             {coarseStatus?.in_sync ? (
                                 <CheckCircle className="w-3 h-3 text-green-500" />
                             ) : (
                                 <XCircle className="w-3 h-3 text-red-500" />
                             )}
                         </div>
-                        <p className="text-[10px] text-zinc-500 leading-tight mb-2">
+                        <p className="text-[10px] text-zinc-800 dark:text-zinc-500 leading-tight mb-2">
                             Stage 1: Retrieves relevant papers using summary embeddings
                         </p>
                         <div className="flex justify-between text-xs">
-                            <span className="text-zinc-500">MongoDB:</span>
-                            <span className="text-white">{coarseStatus?.mongodb_count ?? 0}</span>
+                            <span className="text-zinc-800 dark:text-zinc-500">MongoDB:</span>
+                            <span className="text-zinc-800 dark:text-white">{coarseStatus?.mongodb_count ?? 0}</span>
                         </div>
                         <div className="flex justify-between text-xs">
-                            <span className="text-zinc-500">ChromaDB:</span>
-                            <span className="text-white">{coarseStatus?.chromadb_count ?? 0}</span>
+                            <span className="text-zinc-800 dark:text-zinc-500">ChromaDB:</span>
+                            <span className="text-zinc-800 dark:text-white">{coarseStatus?.chromadb_count ?? 0}</span>
                         </div>
                     </div>
 
                     {/* Fine Grained Status */}
-                    <div className="bg-zinc-900 rounded-lg p-3 space-y-2">
+                    <div className="bg-gray-400/10 dark:bg-zinc-900 rounded-2xl p-3 space-y-2">
                         <div className="flex items-center justify-between">
-                            <span className="text-xs text-zinc-400">Fine (Chunks)</span>
+                            <span className="text-xs text-zinc-800 dark:text-zinc-400">Fine (Chunks)</span>
                             {fineStatus && getFulltextIcon(fineStatus.fulltext_indexed_papers)}
                         </div>
-                        <p className="text-[10px] text-zinc-500 leading-tight mb-2">
+                        <p className="text-[10px] text-zinc-800 dark:text-zinc-500 leading-tight mb-2">
                             Stage 2: Searches full-text chunks from selected papers on-demand
                         </p>
                         <div className="flex justify-between text-xs">
-                            <span className="text-zinc-500">Chunks:</span>
+                            <span className="text-zinc-800 dark:text-zinc-500">Chunks:</span>
                             <span className="text-white">{fineStatus?.chromadb_count ?? 0}</span>
                         </div>
                         <div className="flex justify-between text-xs">
-                            <span className="text-zinc-500">Indexed Papers:</span>
+                            <span className="text-zinc-800 dark:text-zinc-500">Indexed Papers:</span>
                             <span className={cn("font-semibold", fineStatus && getFulltextColor(fineStatus.fulltext_indexed_papers))}>
                                 {fineStatus?.fulltext_indexed_papers ?? 0} / 80
                             </span>
@@ -240,7 +239,7 @@ export default function Chat() {
                                 {msg.role === "user" ? (
                                     /* User Message */
                                     <div className="flex gap-3 justify-end">
-                                        <div className="bg-primary text-primary-foreground rounded-lg px-4 py-3 max-w-[80%]">
+                                        <div className="bg-muted/30 text-neutral-900 dark:text-white rounded-2xl border px-4 py-3 max-w-[80%]">
                                             <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
                                         </div>
                                         <div className="flex-shrink-0">
@@ -249,7 +248,7 @@ export default function Chat() {
                                                 alt="User"
                                                 width={32}
                                                 height={32}
-                                                className="rounded-lg"
+                                                className="rounded-2xl"
                                             />
                                         </div>
                                     </div>
@@ -257,7 +256,7 @@ export default function Chat() {
                                     /* Assistant Message - Full Width */
                                     <div className="w-full">
                                         <div className="flex gap-3 items-start mb-2">
-                                            <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-zinc-800 dark:bg-zinc-800 flex items-center justify-center">
+                                            <div className="flex-shrink-0 w-8 h-8 rounded-2xl bg-zinc-800 dark:bg-zinc-800 flex items-center justify-center">
                                                 <Bot className="w-4 h-4 text-zinc-400" />
                                             </div>
                                             <div className="flex-1">
@@ -273,7 +272,7 @@ export default function Chat() {
                                                             {msg.papers.map((paper, i) => (
                                                                 <div
                                                                     key={i}
-                                                                    className="text-xs bg-muted/50 border border-border rounded-lg p-3 hover:bg-muted/80 transition-all duration-300 hover:scale-[1.02] hover:shadow-md opacity-0 animate-fadeInUp cursor-pointer"
+                                                                    className="text-xs bg-muted/50 border border-border rounded-2xl p-3 hover:bg-muted/80 transition-all duration-300 hover:scale-[1.02] hover:shadow-md opacity-0 animate-fadeInUp cursor-pointer"
                                                                     style={{
                                                                         animationDelay: `${i * 100}ms`,
                                                                         animationFillMode: 'forwards'
@@ -306,7 +305,7 @@ export default function Chat() {
 
                         {loading && (
                             <div className="flex gap-3 items-start">
-                                <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-zinc-800 dark:bg-zinc-800 flex items-center justify-center">
+                                <div className="flex-shrink-0 w-8 h-8 rounded-2xl bg-zinc-800 dark:bg-zinc-800 flex items-center justify-center">
                                     <Bot className="w-4 h-4 text-zinc-400" />
                                 </div>
                                 <div className="flex-1">
@@ -322,7 +321,7 @@ export default function Chat() {
                 {/* Input */}
                 <div className="p-4">
                     <div className="max-w-4xl mx-auto">
-                        <div className="flex gap-2 items-center bg-muted/50 rounded-2xl p-2 border">
+                        <div className="flex gap-2 items-center bg-muted/50 rounded-3xl p-2 border">
                             {/* Dropdown Selects */}
                             <div className="flex gap-2 items-center">
                                 <Select value={topKPapers} onValueChange={setTopKPapers}>

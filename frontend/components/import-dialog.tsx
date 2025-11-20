@@ -184,7 +184,7 @@ export function ImportDialog({ triggerClassName, onImportSuccess }: ImportDialog
                   <RadioGroupItem value="bulk" id="bulk" className="peer sr-only" />
                   <Label
                     htmlFor="bulk"
-                    className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
+                    className="flex flex-col items-center justify-between rounded-2xl border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
                   >
                     <span className="text-base font-semibold">Bulk Import</span>
                     <span className="text-xs text-muted-foreground mt-1">Specify limit (default 1000)</span>
@@ -194,7 +194,7 @@ export function ImportDialog({ triggerClassName, onImportSuccess }: ImportDialog
                   <RadioGroupItem value="recent" id="recent" className="peer sr-only" />
                   <Label
                     htmlFor="recent"
-                    className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
+                    className="flex flex-col items-center justify-between rounded-2xl border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
                   >
                     <span className="text-base font-semibold">Recent Papers</span>
                     <span className="text-xs text-muted-foreground mt-1">Latest 50 papers</span>
@@ -245,7 +245,7 @@ export function ImportDialog({ triggerClassName, onImportSuccess }: ImportDialog
             </div>
             <Progress value={progress} className="w-full" />
 
-            <div className="border rounded-md bg-muted/50 p-4 h-[200px] overflow-hidden flex flex-col">
+            <div className="border rounded-2xl bg-muted/50 p-4 h-[200px] overflow-hidden flex flex-col">
               <div className="text-xs font-medium mb-2 text-muted-foreground uppercase tracking-wider">Logs</div>
               <ScrollArea className="flex-1">
                 <div className="space-y-1">
@@ -265,14 +265,14 @@ export function ImportDialog({ triggerClassName, onImportSuccess }: ImportDialog
             </div>
 
             {status === "success" && (
-              <div className="flex items-center gap-2 text-green-600 bg-green-50 p-3 rounded-md border border-green-100">
+              <div className="flex items-center gap-2 text-green-600 bg-green-50 p-3 rounded-2xl border border-green-100">
                 <CheckCircle className="h-5 w-5" />
                 <span className="text-sm font-medium">Import completed successfully!</span>
               </div>
             )}
 
             {status === "error" && (
-              <div className="flex items-center gap-2 text-red-600 bg-red-50 p-3 rounded-md border border-red-100">
+              <div className="flex items-center gap-2 text-red-600 bg-red-50 p-3 rounded-2xl border border-red-100">
                 <XCircle className="h-5 w-5" />
                 <span className="text-sm font-medium">Import failed. Check logs for details.</span>
               </div>

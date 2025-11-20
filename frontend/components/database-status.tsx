@@ -49,7 +49,7 @@ export function DatabaseStatus() {
   if (!status) return null;
 
   return (
-    <div className="flex items-center gap-4 text-xs border rounded-md px-3 py-1.5 bg-muted/50">
+    <div className="flex items-center gap-4 text-xs border rounded-2xl px-3 py-1.5 bg-muted/50">
       <div className="flex items-center gap-1.5" title="MongoDB Count">
         <Database className="h-3 w-3 text-green-600" />
         <span className="font-medium">Mongo:</span>

@@ -112,7 +112,7 @@ export default function Dataset() {
                             data.map((paper) => (
                                 <div
                                     key={paper._id}
-                                    className="p-3 border rounded-md shadow-sm hover:bg-accent/50 transition-colors flex flex-col gap-1 cursor-pointer"
+                                    className="p-3 border rounded-2xl shadow-sm hover:bg-accent/50 transition-colors flex flex-col gap-1 cursor-pointer"
                                     onClick={() => setSelectedPaper(paper)}
                                 >
                                     <div className="flex items-start justify-between gap-4">

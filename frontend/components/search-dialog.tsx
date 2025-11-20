@@ -247,7 +247,7 @@ export function SearchDialog({ open, onOpenChange, onPaperClick }: SearchDialogP
                 results.results.map((paper) => (
                   <div
                     key={paper.arxiv_id}
-                    className="border rounded-lg p-4 hover:bg-accent/50 transition-colors cursor-pointer"
+                    className="border rounded-2xl p-4 hover:bg-accent/50 transition-colors cursor-pointer"
                     onClick={() => {
                       onPaperClick({ arxiv_id: paper.arxiv_id, title: paper.title });
                       onOpenChange(false);
