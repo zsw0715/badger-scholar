@@ -42,6 +42,7 @@ export default function Dataset() {
     const [pageSize, setPageSize] = useState(20);
     const [total, setTotal] = useState(0);
     const [selectedPaper, setSelectedPaper] = useState<Paper | null>(null);
+    const [refreshTrigger, setRefreshTrigger] = useState(0);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -65,7 +66,7 @@ export default function Dataset() {
         };
 
         fetchData();
-    }, [page, pageSize]);
+    }, [page, pageSize, refreshTrigger]);
 
     const totalPages = Math.ceil(total / pageSize);
 
@@ -87,7 +88,7 @@ export default function Dataset() {
                         </EmptyDescription>
                     </EmptyHeader>
                     <EmptyContent>
-                        <ImportDialog />
+                        <ImportDialog onImportSuccess={() => setRefreshTrigger(c => c + 1)} />
                     </EmptyContent>
                 </Empty>
             </div>
@@ -217,7 +218,10 @@ export default function Dataset() {
                 </div>
 
                 <div className="flex items-center gap-2 mr-4">
-                    <ImportDialog triggerClassName="border-4 border-zinc-200 dark:border-zinc-700" />
+                    <ImportDialog
+                        triggerClassName="border-4 border-zinc-200 dark:border-zinc-700"
+                        onImportSuccess={() => setRefreshTrigger(c => c + 1)}
+                    />
                     <Button variant="destructive" onClick={() => alert("Drop dataset functionality coming soon!")}>
                         Drop Dataset
                     </Button>

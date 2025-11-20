@@ -30,9 +30,9 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <div className="min-h-screen w-full bg-white dark:bg-black flex flex-col">
+          <div className="h-screen w-full bg-white dark:bg-black flex flex-col">
             <Navbar />
-            <main className="flex-1 w-full">
+            <main className="flex-1 w-full overflow-hidden">
               {children}
             </main>
           </div>
