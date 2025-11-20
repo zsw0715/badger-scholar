@@ -7,7 +7,7 @@
 
 import os
 import re
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Any
 
 from pymongo import MongoClient
 from sentence_transformers import SentenceTransformer
@@ -204,8 +204,36 @@ class FullTextIndexer:
             "fulltext_indexed_papers": mongo_fulltext_papers,
             "in_sync": mongo_chunk_count == chroma_chunk_count
         }
+    
+    def reset_index(self) -> Dict[str, Any]:
+        """
+        Drop all fulltext chunks in ChromaDB and reset the collection.
+        Also reset 'fulltext_indexed' flag in MongoDB.
+        """
+        count = self.collection_db.count()
         
-            # --------- Main pipeline ----------
+        # Delete the collection
+        self.chroma_client.delete_collection(CHROMA_COLLECTION_NAME)
+        
+        # Recreate the collection
+        self.collection_db = self.chroma_client.get_or_create_collection(
+            name=CHROMA_COLLECTION_NAME,
+            metadata={"hnsw:space": "cosine"}
+        )
+        
+        # Reset MongoDB flags
+        update_result = self.collection.update_many(
+            {},
+            {"$set": {"fulltext_indexed": False}, "$unset": {"fulltext_embedding_model": "", "fulltext_chunk_count": ""}}
+        )
+        
+        return {
+            "deleted_chunks": count,
+            "reset_mongodb_flags": update_result.modified_count,
+            "message": "ChromaDB fulltext index reset and MongoDB flags cleared."
+        }
+        
+    # --------- Main pipeline ----------
     def run_indexing(self, limit: Optional[int] = None) -> int:
         papers = self.load_unindexed(limit=limit)
         if not papers:

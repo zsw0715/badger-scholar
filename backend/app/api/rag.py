@@ -129,3 +129,25 @@ async def get_fulltext_sync_status():
             status_code=500,
             detail=f"Failed to fetch fulltext sync status: {str(e)}"
         )
+
+@router.delete("/drop")
+async def drop_all_vectors():
+    """
+    Drop all vectors from ChromaDB (both coarse and fine) and reset MongoDB flags.
+    """
+    try:
+        coarse_res = vector_index_service.reset_index()
+        fine_res = fulltext_indexer.reset_index()
+        
+        return {
+            "status": "success",
+            "coarse_index": coarse_res,
+            "fine_index": fine_res,
+            "message": "All vector indexes have been reset."
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to drop vectors: {str(e)}"
+        )
+

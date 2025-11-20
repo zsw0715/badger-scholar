@@ -6,7 +6,7 @@ import sys
 from pymongo import MongoClient
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "../services"))
-from etl_service import run_recent, run_bulk
+from etl_service import run_recent, run_bulk, drop_all_data
 
 router = APIRouter(prefix="/api/etl", tags=["ETL"])
 
@@ -60,6 +60,15 @@ async def run_etl(request: ETLRequest) -> ETLResponse:
       stats=stats
     )
       
+  except Exception as e:
+    raise HTTPException(status_code=500, detail=str(e))
+
+@router.delete("/drop")
+async def drop_data():
+  """Drop all data from MongoDB."""
+  try:
+    result = drop_all_data()
+    return result
   except Exception as e:
     raise HTTPException(status_code=500, detail=str(e))
   

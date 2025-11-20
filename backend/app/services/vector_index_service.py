@@ -148,6 +148,34 @@ class VectorIndexService:
             "in_sync": mongo_count == chroma_count
         }
 
+    def reset_index(self) -> Dict[str, Any]:
+        """
+        Drop all data in ChromaDB and reset the collection.
+        Also reset 'vector_indexed' flag in MongoDB.
+        """
+        count = self.chroma_coll.count()
+        
+        # Delete the collection
+        self.chroma_client.delete_collection(CHROMA_COLLECTION_NAME)
+        
+        # Recreate the collection
+        self.chroma_coll = self.chroma_client.get_or_create_collection(
+            name=CHROMA_COLLECTION_NAME,
+            metadata={"hnsw:space": "cosine"}
+        )
+        
+        # Reset MongoDB flags
+        update_result = self.mongo_coll.update_many(
+            {},
+            {"$set": {"vector_indexed": False}, "$unset": {"embedding_model": ""}}
+        )
+        
+        return {
+            "deleted_vectors": count,
+            "reset_mongodb_flags": update_result.modified_count,
+            "message": "ChromaDB index reset and MongoDB flags cleared."
+        }
+
     # ========= Entry point =========
     def run_indexing(self, limit: Optional[int] = None, batch_size: int = BATCH_SIZE) -> int:
         papers = self.load_unindexed_papers(limit)

@@ -167,6 +167,17 @@ def upsert_docs(docs: List[Dict]) -> Dict:
   client.close()
   return stats
 
+def drop_all_data() -> Dict:
+  """Drop all data from MongoDB."""
+  client = MongoClient(MONGO_URI)
+  col = client[DB_NAME][COLL_NAME]
+  
+  count = col.count_documents({})
+  col.drop()
+  
+  client.close()
+  return {"deleted": count, "message": "All data dropped from MongoDB"}
+
 # ==== High-level ETL Functions ====
 def run_recent(category: str, skip: int = 0, show_progress: bool = True) -> Dict:
   """Run the ETL in recent mode."""
@@ -223,4 +234,3 @@ def run_bulk(category: str, limit: int = 1000, show_progress: bool = True) -> Di
   print("="*50)
   
   return total_stats
-
