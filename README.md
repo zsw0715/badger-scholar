@@ -381,7 +381,7 @@ User Question: "How do transformers handle long sequences?"
                     ↓
 ┌─────────────────────────────────────────────────┐
 │ LLM Answer Generation                           │
-│ - Model: GPT-4o-mini                            │
+│ - Model: <OPENAI MODEL>                         │
 │ - Temperature: 0.2                              │
 │ - System: "Answer based only on context"       │
 └───────────────────┬─────────────────────────────┘
