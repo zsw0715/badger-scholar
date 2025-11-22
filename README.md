@@ -267,6 +267,128 @@ File: `sync_to_es.py` and `elasticsearch_service.py`
 
 ### 4. AI Integration
 
+   KEY FILES: `rag.py`, `rag_service.py`, `retriever_service.py`, `fulltext_indexer.py`, `rag_chunk_retriever.py`, `fulltext_service.py` and `vector_index_service.py`
+
+**4.1. The Functionality of Each File**
+- `rag.py`: (API Layer): Exposes HTTP endpoints for RAG operations (/api/rag/query, /api/rag/sync-coarse, /api/rag/sync-status ... )
+- `rag_service.py`: (Orchestrator): Coordinates the entire Two-Stage RAG pipeline, calls coarse/fine retrievers and LLM
+- `retriever_service.py`: (Coarse Retrieval): Semantic search on summary embeddings to find top-k relevant papers
+- `fulltext_indexer.py`: (PDF Processing): Downloads PDF from arXiv, extracts text with pypdf, cleans text (removes LaTeX/citations), chunks into 1500-character segments with 200-character overlap
+- `rag_chunk_retriever.py`: (Fine Retrieval): Semantic search on full-text chunks to find the most relevant paragraphs
+- `fulltext_service.py`: (Fine Indexing): Generates embeddings for full-text chunks and syncs to ChromaDB's papers_fulltext_chunks collection
+- `vector_index_service.py`: (Coarse Indexing): Generates summary embeddings (title + abstract) and syncs to ChromaDB's papers_embeddings collection
+
+**4.2. Design Mode: Two Stage Rag (Improvement over CS639 Last Project)**
+**Problem with Single-Stage RAG:**
+- Searching all full-text chunks across the entire database is computationally expensive (I remember it was the coarse lecture recording scripts)
+
+**Solution: Two-Stage RAGs**
+> Summary: provided with 10000 papers in the database(TOO LARGE!!), first stage finds the top_k most relevant accordings to the summary of the papers(MongoDB attr), and then the second stage is download the fulltexts of the top_k and finding the top 100 most relevant chunk within the top_k's fulltext of the previous stage, returning the top_k most relevant chunk (default 8) to the user and LLM.
+
+**Stage 1: Coarse-Grained Retrieval (Paper-Level)**
+```
+# retriever_service.py
+coarse_results = retriever_service.search(
+    query="How do transformers handle long sequences?",
+    top_k=5  # Returns 5 most relevant papers
+)
+# Searches ChromaDB 'papers_embeddings' collection
+# Embeddings generated from: "Title: {title}\n\nAbstract: {summary}"
+```
+Output: 5 most relevant papers based on semantic similarity of summaries
+**Stage 2: Fine-Grained Retrieval (Chunk-Level)**
+```
+# rag_service.py
+for arxiv_id in coarse_results:
+    if not paper.get("fulltext_indexed"):
+        # On-demand PDF extraction
+        fulltext_indexer.process_single_paper(paper)
+
+# rag_chunk_retriever.py
+all_chunks = chunk_retriever.retrieve_chunks(
+    question=question,
+    top_k=100  # Get broad candidate set
+)
+
+# Filter to only chunks from coarse-selected papers
+fine_chunks = [
+    chunk for chunk in all_chunks
+    if chunk["arxiv_id"] in coarse_arxiv_ids
+][:8]  # Take top 8 most relevant chunks
+```
+Output: 8 most relevant text chunks from the 5 papers selected in Stage 1
+
+**4.3. On-Demand PDF Extraction**
+> Only download the fulltext that's needed, and a sliding window that delete the previous stored fulltext when count > 70
+Key design: Lazy loading of full-text to save storage and processing time
+```
+# rag_service.py: answer_question()
+for arxiv_id in coarse_results:
+    paper = mongo_collection.find_one({"arxiv_id": arxiv_id})
+    if not paper.get("fulltext_indexed", False):
+        print(f"Fulltext not indexed for {arxiv_id}, indexing now...")
+        fulltext_indexer.process_single_paper(paper)
+```
+**Workflow:**
+1. Check MongoDB flag: `fulltext_indexed`
+2. If `False`, download PDF: `https://arxiv.org/pdf/{arxiv_id}.pdf`
+3. Extract text with `pypdf.PdfReader`
+4. Clean text: remove `[citations]`, `$math$`, control characters
+5. Chunk into 1500-char segments with 200-char overlap
+6. Generate embeddings for each chunk
+7. Store in ChromaDB `papers_fulltext_chunks` collection
+8. Update MongoDB: `{"fulltext_indexed": True}`
+
+**Benefits:**
+- Only process papers that are actually queried
+- Saves ~90% storage vs. indexing all papers upfront
+
+**4.4 Data Flow Diagrams**
+
+```
+
+User Question: "How do transformers handle long sequences?"
+    ↓
+┌─────────────────────────────────────────────────┐
+│ Stage 1: Coarse-Grained Retrieval               │
+│ - Query embedding: model.encode(question)       │
+│ - Search ChromaDB 'papers_embeddings'           │
+│ - Return top-5 papers by cosine similarity      │
+└───────────────────┬─────────────────────────────┘
+                    ↓
+         [2401.12345, 2402.67890, 2403.11111, ...]
+                    ↓
+┌─────────────────────────────────────────────────┐
+│ On-Demand PDF Extraction (if needed)            │
+│ - Check: fulltext_indexed == True?             │
+│ - If False: Download → Extract → Chunk → Embed │
+└───────────────────┬─────────────────────────────┘
+                    ↓
+┌─────────────────────────────────────────────────┐
+│ Stage 2: Fine-Grained Retrieval                 │
+│ - Search ChromaDB 'papers_fulltext_chunks'      │
+│ - Filter: only chunks from coarse papers        │
+│ - Return top-8 chunks                           │
+└───────────────────┬─────────────────────────────┘
+                    ↓
+        [chunk_0, chunk_3, chunk_7, ...]
+                    ↓
+┌─────────────────────────────────────────────────┐
+│ Context Construction                            │
+│ - Build prompt with source attribution          │
+│ - Format: [Source N] arxiv_id | chunk_id       │
+└───────────────────┬─────────────────────────────┘
+                    ↓
+┌─────────────────────────────────────────────────┐
+│ LLM Answer Generation                           │
+│ - Model: GPT-4o-mini                            │
+│ - Temperature: 0.2                              │
+│ - System: "Answer based only on context"       │
+└───────────────────┬─────────────────────────────┘
+                    ↓
+      Final Answer + Source Papers + Chunks
+
+```
 
 ### 5. Backend
    - The Backend API part use the FastAPI framework
