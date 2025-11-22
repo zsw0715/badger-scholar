@@ -125,11 +125,11 @@ The following schema is the structure of data being scraped from arXiv and injec
 ```
 **Key Design Decisions:**
 
-1. **`arxiv_id`**: Used to construct PDF URL: `https://arxiv.org/pdf/{arxiv_id}` for on-demand full-text downloading
+   1. **`arxiv_id`**: Used to construct PDF URL: `https://arxiv.org/pdf/{arxiv_id}` for on-demand full-text downloading
 
-2. **`vector_indexed`** & **`fulltext_indexed`**: Boolean flags to prevent duplicate indexing during sync to ChromaDB
+   2. **`vector_indexed`** & **`fulltext_indexed`**: Boolean flags to prevent duplicate indexing during sync to ChromaDB
 
-3. **`embedding_model`**: Records which model generated the embeddings (currently `all-MiniLM-L6-v2`), enabling model version tracking and potential re-indexing
+   3. **`embedding_model`**: Records which model generated the embeddings (currently `all-MiniLM-L6-v2`), enabling model version tracking and potential re-indexing
 
 2. **How Data is extracted? ETL Processing**
 **Key Design Decisions:**
