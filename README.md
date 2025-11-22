@@ -164,6 +164,105 @@ HEADERS = {
    - loading data into the MongoDB by upsert to avoid the duplicate data, and update the old data, the existing papers, if re-scraped.
 
 
+3. **Elasticsearch Synchronization**
+
+File: `sync_to_es.py` and `elasticsearch_service.py`
+   
+   Data Flow: MongoDB (Source of Truth) → `sync_to_es.py` → Elasticsearch (Search Index)
+
+**3.1. Sync Implementation (`sync_to_es.py`)**
+
+   The synchronization process follows 5 steps:
+
+   - **Step 1: Connection Check**
+     es_service.ping()  # Verify Elasticsearch is reachable
+   - **Step 2: Index Management**
+     - If `recreate_index=True`: Delete old index and recreate
+     - If index doesn't exist: Call `create_index()` to create with proper mapping
+     
+     Key Index Mapping Design:
+```
+{
+   "arxiv_id": {"type": "keyword"},           # Exact match
+   "title": {"type": "text", "analyzer": "english"},  # Full-text search
+   "summary": {"type": "text", "analyzer": "english"},
+   "authors": {"type": "text"},
+   "published": {"type": "date"},             # Date range filtering
+   "categories": {"type": "keyword"}          # Exact match for filtering
+   ... you can find it in elasticsaerch_service.py
+}
+```
+   - **Step 3: Batch Reading from MongoDB**
+     BATCH_SIZE = 100  # Process 100 papers at a time
+     collection.find().skip(skip).limit(BATCH_SIZE)
+          Uses pagination (`skip` + `limit`) to avoid loading all data into memory
+
+   - **Step 4: Data Transformation**
+     def prepare_document_for_es(doc):
+         # 1. Remove MongoDB's _id field (ES uses arxiv_id as _id)
+         # 2. Ensure required fields exist (title, summary, authors, categories)
+         # 3. Validate array types (authors, categories must be lists)
+      **Why transform?**
+     - MongoDB's `_id` (ObjectId) → ES uses `arxiv_id` as document ID
+     - Ensures idempotency: re-syncing won't create duplicates
+
+   - **Step 5: Bulk Indexing to Elasticsearch**
+     bulk(self.es, actions, stats_only=True, raise_on_error=False)
+          Uses Elasticsearch's bulk API for efficient batch insertion
+
+   **Key Design Decisions:**
+   
+   - **Batch Processing**: BATCH_SIZE=100 balances memory usage and network overhead
+   - **Idempotency**: Using `arxiv_id` as ES document `_id` ensures duplicate syncs overwrite rather than duplicate
+   - **Error Tolerance**: Partial failures don't stop the entire sync process
+   - **Status Tracking**: `get_sync_status()` compares MongoDB and ES document counts to verify sync completion
+
+**3.2. Search Implementation (`elasticsearch_service.py`)**
+   Key FILES: "elasticsearch_service.py 's search_papers()" and thee "api/search.py's search_papers()"
+   The `search_papers()` function provides advanced full-text search with multiple features:
+   - **Multi-field Search with Boosting**:
+   ```
+     "multi_match": {
+       "query": query,
+       "fields": ["title^3", "summary^1", "authors^2"],  # title has 3x weight
+       "type": "best_fields",
+       "fuzziness": "AUTO"  # Typo tolerance (transformr → transformer)
+     }
+   ```
+   - **Filter Support**:
+     - Category filtering: `{"term": {"categories": category}}`
+     - Author filtering: `{"match": {"authors": author}}`
+     - Date range: `{"range": {"published": {"gte": from_date, "lte": to_date}}}`
+
+   - **Highlighting**:
+   ```
+     "highlight": {
+       "fields": {
+         "title": {"number_of_fragments": 0},        # Highlight entire title
+         "summary": {"fragment_size": 150, "number_of_fragments": 3}  # 3 snippets
+       },
+       "pre_tags": ["<em>"], "post_tags": ["</em>"]  # HTML tags for frontend
+     }
+   ```
+   Returns matched text snippets with `<em>` tags for highlighting in UI
+
+   - **Ranking**:
+   ```
+     "sort": [
+       {"_score": {"order": "desc"}},      # Relevance score first
+       {"published": {"order": "desc"}}    # Then by publication date
+     ]
+
+   ```
+   **Why Elasticsearch over MongoDB for search?**
+   
+   - **Inverted Index**: O(1) lookup for documents containing keywords
+   - **TF-IDF Scoring**: Ranks results by relevance (term frequency × inverse document frequency)
+   - **Analyzer**: English stemming (running → run), stop words removal (the, a, an)
+   - **Fuzzy Search**: Handles typos automatically
+   - MongoDB's text index lacks these advanced features
+
+
 ### 3. AI Integration
 
 
