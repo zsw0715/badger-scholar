@@ -164,7 +164,7 @@ HEADERS = {
    - loading data into the MongoDB by upsert to avoid the duplicate data, and update the old data, the existing papers, if re-scraped.
 
 
-3. **Elasticsearch Synchronization**
+### 3. **Elasticsearch Synchronization**
 
 File: `sync_to_es.py` and `elasticsearch_service.py`
    
