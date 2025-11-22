@@ -273,9 +273,9 @@ File: `sync_to_es.py` and `elasticsearch_service.py`
 - `rag.py`: (API Layer): Exposes HTTP endpoints for RAG operations (/api/rag/query, /api/rag/sync-coarse, /api/rag/sync-status ... )
 - `rag_service.py`: (Orchestrator): Coordinates the entire Two-Stage RAG pipeline, calls coarse/fine retrievers and LLM
 - `retriever_service.py`: (Coarse Retrieval): Semantic search on summary embeddings to find top-k relevant papers
-- `fulltext_indexer.py`: (PDF Processing): Downloads PDF from arXiv, extracts text with pypdf, cleans text (removes LaTeX/citations), chunks into 1500-character segments with 200-character overlap
+- `fulltext_service.py`: (PDF Processing): Downloads PDF from arXiv, extracts text with pypdf, cleans text (removes LaTeX/citations), chunks into 1500-character segments with 200-character overlap
 - `rag_chunk_retriever.py`: (Fine Retrieval): Semantic search on full-text chunks to find the most relevant paragraphs
-- `fulltext_service.py`: (Fine Indexing): Generates embeddings for full-text chunks and syncs to ChromaDB's papers_fulltext_chunks collection
+- `fulltext_indexer.py`: (Fine Indexing): Generates embeddings for full-text chunks and syncs to ChromaDB's papers_fulltext_chunks collection
 - `vector_index_service.py`: (Coarse Indexing): Generates summary embeddings (title + abstract) and syncs to ChromaDB's papers_embeddings collection
 
 **4.2. Design Mode: Two Stage Rag (Improvement over CS639 Last Project)**
