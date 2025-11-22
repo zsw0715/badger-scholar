@@ -229,6 +229,8 @@ File: `sync_to_es.py` and `elasticsearch_service.py`
        "fuzziness": "AUTO"  # Typo tolerance (transformr → transformer)
      }
    ```
+   title > summary > author
+
    - **Filter Support**:
      - Category filtering: `{"term": {"categories": category}}`
      - Author filtering: `{"match": {"authors": author}}`
@@ -263,13 +265,72 @@ File: `sync_to_es.py` and `elasticsearch_service.py`
    - MongoDB's text index lacks these advanced features
 
 
-### 3. AI Integration
+### 4. AI Integration
 
 
-### 4. Backend
+### 5. Backend
+   - The Backend API part use the FastAPI framework
+   - The API Design is here
+```
+# 1. ETL Operations (/api/etl)
+POST   /api/etl/run          # Run ETL pipeline (recent/bulk mode)
+GET    /api/etl/papers       # List papers with pagination
+DELETE /api/etl/drop         # Drop all data from MongoDB
+GET    /api/etl/status       # Get ETL status
+
+# 2. Search Operations (/api/search)
+GET    /api/search           # Full-text search with filters
+GET    /api/search/stats     # Elasticsearch index statistics
+GET    /api/search/status    # Sync status (MongoDB vs ES)
+POST   /api/search/sync      # Sync MongoDB → Elasticsearch
+POST   /api/search/index/create   # Create ES index
+DELETE /api/search/index/delete   # Delete ES index
+
+# 3. RAG Operations (/api/rag)
+POST   /api/rag/query        # Ask question (Two-Stage RAG)
+POST   /api/rag/sync-coarse  # Sync summary embeddings to ChromaDB
+GET    /api/rag/sync-status  # Check coarse embedding sync status
+GET    /api/rag/sync-status/fulltext  # Check fine embedding sync status
+DELETE /api/rag/drop         # Drop all vectors from ChromaDB
+```
+   - Service Layer Pattern is here
+```
+API Layer (app/api/)
+    ↓ calls
+Service Layer (app/services/)
+    ↓ interacts with
+Data Layer (MongoDB, ES, ChromaDB)
+```
+   - Pydantic Models for Validation
+```
+example:
+class ETLRequest(BaseModel):
+    mode: Literal["recent", "bulk"] = Field(default="recent")
+    categories: str = Field(default="cs.AI")
+    limit: Optional[int] = Field(default=500, ge=1)
+
+class ETLResponse(BaseModel):
+    status: str
+    message: str
+    stats: dict
+```
+   - CORS Configuration
+```
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],          # Allow all origins (development)
+    allow_credentials=True,
+    allow_methods=["*"],          # Allow all HTTP methods
+    allow_headers=["*"],          # Allow all headers
+)
+```
+the reason is to enables the Next.js frontend (running on localhost:3000) to call the backend API (running on localhost:8000) without CORS errors.
+
+   - API Documentation: Swagger UI: http://localhost:8000/docs OR ReDoc: http://localhost:8000/redoc
 
 
-### 5. Frontend
+
+### 6. Frontend
 The Frontend uses the Nextjs 15 and React 19. Using TypeScript, TailwindCSS, Shadcn UI
 
 
