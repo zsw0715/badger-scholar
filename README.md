@@ -93,9 +93,12 @@ This project was developed as a personal learning initiative to apply and extend
 
 
 ### 2. Data Integration & ETL 
+
 1. **MongoDB Schema Design**
-The following schema is the structure of data being scraped from arXiv and injected into MongoDB:
-```
+
+   The following schema is the structure of data being scraped from arXiv and injected into MongoDB:
+
+```json
 {
   "_id": "2401.12345",
   "arxiv_id": "2401.12345",
@@ -123,16 +126,30 @@ The following schema is the structure of data being scraped from arXiv and injec
   "fulltext_indexed": false
 }
 ```
-**Key Design Decisions:**
 
-   1. **`arxiv_id`**: Used to construct PDF URL: `https://arxiv.org/pdf/{arxiv_id}` for on-demand full-text downloading
+   **Key Design Decisions:**
 
-   2. **`vector_indexed`** & **`fulltext_indexed`**: Boolean flags to prevent duplicate indexing during sync to ChromaDB
+   - **`arxiv_id`**: Used to construct PDF URL: `https://arxiv.org/pdf/{arxiv_id}` for on-demand full-text downloading
+   - **`vector_indexed`** & **`fulltext_indexed`**: Boolean flags to prevent duplicate indexing during sync to ChromaDB
+   - **`embedding_model`**: Records which model generated the embeddings (currently `all-MiniLM-L6-v2`), enabling model version tracking and potential re-indexing
 
-   3. **`embedding_model`**: Records which model generated the embeddings (currently `all-MiniLM-L6-v2`), enabling model version tracking and potential re-indexing
+2. **ETL Processing**
 
-2. **How Data is extracted? ETL Processing**
-**Key Design Decisions:**
+   File: `etl_service.py` and `arxiv_etl.py`
+
+   **2.1. Web Scraping for Paper IDs**
+   
+   - Tool: BeautifulSoup (HTML parsing)
+   - Extract arxiv_id from paper links using CSS selectors:
+
+```python
+soup = BeautifulSoup(r.text, "html.parser")
+links = soup.select("dt a[title='Abstract']")
+```
+
+   - Output: List of recent paper IDs → used in next stage
+
+   **2.2. Data Transformation & Cleaning**
 
 
 ### 3. AI Integration
