@@ -148,8 +148,20 @@ links = soup.select("dt a[title='Abstract']")
 ```
 
    - Output: List of recent paper IDs → used in next stage
+   - The reason why I'm using the BeautifulSoup to scrape the data is because I want the users to see what and get what (https://arxiv.org/list/cs.AI/recent)
+   - Here is the user agent:
+```
+HEADERS = {
+   "User-Agent": "BadgerScholar/0.1 (contact: szhang829@wisc.edu) Purpose: academic learning / ETL for demo"
+}
+```
 
    **2.2. Data Transformation & Cleaning**
+   - Using the http://export.arxiv.org/api/query?id_list=... arXiv api to get the raw metadata of the papers giving the list of Ids(from previous step). Getting the data maybe slow become only 50 data items will be got for one time, and thread sleep for 3 seconds based on the arxiv api rule.
+   - output is the structured metadata (title, summary, authors, categories, dates), the key function here is entries_to_doc() in both files `etl_service.py` and `arxiv_etl.py`. The structured data follows the MongoDB schema above.
+   - the user can select run_recent and run_bulk mode, run_recent select the first 50 papers based on selected category. The bulk mode allows the user the specify the number to scrape and category. The default is 1000. 
+   - data cleaning inludes Remove version numbers from arxiv_id (2401.12345v1 → 2401.12345). Normalize summary text (strip newlines, trim whitespace). Extract structured arrays (authors, categories, links). Standardize date formats (published, updated)...
+   - loading data into the MongoDB by upsert to avoid the duplicate data, and update the old data, the existing papers, if re-scraped.
 
 
 ### 3. AI Integration
