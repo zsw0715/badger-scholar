@@ -92,40 +92,44 @@ This project was developed as a personal learning initiative to apply and extend
    3.4. `fulltext_chunks` collection stores PDF full-text chunk embeddings for fine-grained retrieval (precisely locating relevant paragraphs).
 
 
-
 ### 2. Data Integration & ETL 
-- Data Scaping, Cleaning and Injection (MongoDB part)
-The following schema is the schema of Data that's being scraping and injected into the nosql database.
+1. **MongoDB Schema Design**
+The following schema is the structure of data being scraped from arXiv and injected into MongoDB:
 ```
 {
-  "_id": "<mongodbid>",
-  "arxiv_id": "...",
-  "authors": [
-    "string",
-    ...
-  ],
-  "categories": [
-    "..."
-  ],
-  "link_abs": "https://arxiv.org/abs/{arxid_id}",
+  "_id": "2401.12345",
+  "arxiv_id": "2401.12345",
+  "title": "...",
+  "summary": "...",
+  "authors": ["Author 1", "Author 2"],
+  "categories": ["cs.AI", "cs.LG"],
+  "primary_category": "cs.AI",
+  "published": "2024-01-15T00:00:00Z",
+  "updated": "2024-01-16T00:00:00Z",
+  "link_abs": "https://arxiv.org/abs/2401.12345",
   "links": [
     {
-      "href": "https://arxiv.org/abs/{arxid_id}",
+      "href": "https://arxiv.org/abs/2401.12345",
       "type": "text/html"
     },
-    ...
+    {
+      "href": "https://arxiv.org/pdf/2401.12345",
+      "type": "application/pdf"
+    }
   ],
-  "primary_category": "...",
-  "published": "...",
-  "summary": "...",
-  "title": "...",
-  "updated": "...",
-  "embedding_model": "...",
-  "vector_indexed": <boolean>,
-  "fulltext_indexed": <boolean>
+  "source": "api",
+  "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+  "vector_indexed": true,
+  "fulltext_indexed": false
 }
 ```
+**Key Design Decisions:**
 
+1. **`arxiv_id`**: Used to construct PDF URL: `https://arxiv.org/pdf/{arxiv_id}` for on-demand full-text downloading
+
+2. **`vector_indexed`** & **`fulltext_indexed`**: Boolean flags to prevent duplicate indexing during sync to ChromaDB
+
+3. **`embedding_model`**: Records which model generated the embeddings (currently `all-MiniLM-L6-v2`), enabling model version tracking and potential re-indexing
 
 
 ### 3. AI Integration
