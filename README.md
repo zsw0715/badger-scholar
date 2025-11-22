@@ -131,6 +131,9 @@ The following schema is the structure of data being scraped from arXiv and injec
 
 3. **`embedding_model`**: Records which model generated the embeddings (currently `all-MiniLM-L6-v2`), enabling model version tracking and potential re-indexing
 
+2. **How Data is extracted? ETL Processing**
+**Key Design Decisions:**
+
 
 ### 3. AI Integration
 
@@ -139,6 +142,7 @@ The following schema is the structure of data being scraped from arXiv and injec
 
 
 ### 5. Frontend
+The Frontend uses the Nextjs 15 and React 19. Using TypeScript, TailwindCSS, Shadcn UI
 
 
 ### Future Enhancements && Connection with CS639
