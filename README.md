@@ -1,5 +1,6 @@
 # BadgerScholar 
-> This README contains introduction, how to use, key features, followed with a video introduction. <links here TODO>
+> This README contains introduction, how to use, key features, followed with a video introduction. 
+https://drive.google.com/file/d/1elOUC0_8PC-0aHunAcd9TZwKFI6xeWue/view?usp=sharing
 
 **An AI-Powered Academic Research Assistant**
 
